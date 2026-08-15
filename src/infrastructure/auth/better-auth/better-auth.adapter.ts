@@ -132,22 +132,25 @@ export class BetterAuthAdapter implements AuthEnginePort {
 
   async getOAuthAuthorizationUrl(
     command: OAuthAuthorizationCommand,
-  ): Promise<{ url: string }> {
+  ): Promise<{ url: string; setCookies: string[] }> {
     try {
       const auth = await this.instances.getForApplication(command.applicationId);
-      const result = await auth.api.signInSocial({
+      const { headers, response } = await auth.api.signInSocial({
         body: {
           provider: command.provider,
           callbackURL: command.callbackURL,
           errorCallbackURL: command.errorCallbackURL,
+          disableRedirect: true,
         },
+        returnHeaders: true,
       });
 
-      if (!result?.url) {
+      const url = response?.url;
+      if (!url) {
         throw new AuthEngineError('OAuth provider did not return an authorization URL');
       }
 
-      return { url: result.url };
+      return { url, setCookies: collectSetCookies(headers) };
     } catch (error) {
       if (error instanceof APIError) {
         const message = error.message || 'OAuth provider not available';
@@ -302,4 +305,15 @@ export class BetterAuthAdapter implements AuthEnginePort {
     }
     return 'Unknown error';
   }
+}
+
+function collectSetCookies(headers: Headers): string[] {
+  if (typeof headers.getSetCookie === 'function') {
+    const cookies = headers.getSetCookie();
+    if (cookies.length > 0) {
+      return cookies;
+    }
+  }
+  const raw = headers.get('set-cookie');
+  return raw ? [raw] : [];
 }

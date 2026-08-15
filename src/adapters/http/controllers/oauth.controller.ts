@@ -3,7 +3,6 @@ import {
   Get,
   Param,
   Query,
-  Req,
   Res,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -21,12 +20,12 @@ export class OAuthController {
   @Get(':provider')
   @ApiOperation({
     summary:
-      'Start Google/GitHub OAuth for an application — returns authorization URL',
+      'Start Google/GitHub OAuth for an application — redirects the browser to the provider',
   })
   async start(
     @Param('provider') providerParam: string,
     @Query() query: StartOAuthQueryDto,
-    @Res({ passthrough: true }) res: Response,
+    @Res() res: Response,
   ) {
     const provider = parseProvider(providerParam);
     const result = await this.startOAuth.execute({
@@ -35,6 +34,10 @@ export class OAuthController {
       callbackURL: query.callbackURL,
       errorCallbackURL: query.errorCallbackURL,
     });
+
+    for (const cookie of result.setCookies) {
+      res.append('Set-Cookie', cookie);
+    }
 
     // Cookie lets /api/auth/callback/* resolve the correct per-app Better Auth instance
     res.cookie('oauth_app_id', result.applicationId, {
@@ -45,12 +48,9 @@ export class OAuthController {
       path: '/',
     });
 
-    return {
-      provider,
-      redirect: true,
-      url: result.url,
-      applicationId: result.applicationId,
-    };
+    // Top-level redirect so the OAuth state cookie is stored on this API origin
+    // before the browser goes to Google/GitHub.
+    return res.redirect(result.url);
   }
 }
 

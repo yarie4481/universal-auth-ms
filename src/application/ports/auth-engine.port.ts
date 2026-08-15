@@ -64,5 +64,5 @@ export interface AuthEnginePort {
   getJwks(): Promise<JwksDocument>;
   getOAuthAuthorizationUrl(
     command: OAuthAuthorizationCommand,
-  ): Promise<{ url: string }>;
+  ): Promise<{ url: string; setCookies: string[] }>;
 }

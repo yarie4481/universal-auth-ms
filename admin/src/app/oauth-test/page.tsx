@@ -2,7 +2,8 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
-const DEFAULT_CLIENT_ID = "app_337e19c81c23c241a3c9183a8adc97fe";
+const DEFAULT_CLIENT_ID = "app_a2b60f96675365fc261b87c1001226f8";
+const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_ORIGIN ?? "http://localhost:3001";
 
 export default function OAuthTestPage() {
   const callbackURL = useMemo(() => {
@@ -14,46 +15,14 @@ export default function OAuthTestPage() {
 
   const [clientId, setClientId] = useState(DEFAULT_CLIENT_ID);
   const [provider, setProvider] = useState<"google" | "github">("google");
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [lastUrl, setLastUrl] = useState<string | null>(null);
 
-  async function onSubmit(e: FormEvent) {
+  function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
-    setLastUrl(null);
-
-    try {
-      const qs = new URLSearchParams({
-        clientId: clientId.trim(),
-        callbackURL,
-      });
-      const res = await fetch(`/api-proxy/api/v1/oauth/${provider}?${qs}`, {
-        credentials: "include",
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        url?: string;
-        message?: string;
-      };
-
-      if (!res.ok || !data.url) {
-        setError(
-          data.message ??
-            `OAuth start failed (${res.status}). Add the ${provider} provider in Admin → Applications → Providers first.`,
-        );
-        return;
-      }
-
-      setLastUrl(data.url);
-      window.location.href = data.url;
-    } catch {
-      setError(
-        "Cannot reach auth API. Keep npm run start:dev running on port 3001.",
-      );
-    } finally {
-      setBusy(false);
-    }
+    const qs = new URLSearchParams({
+      clientId: clientId.trim(),
+      callbackURL,
+    });
+    window.location.href = `${AUTH_API}/api/v1/oauth/${provider}?${qs}`;
   }
 
   return (
@@ -112,26 +81,14 @@ export default function OAuthTestPage() {
             </p>
           </div>
 
-          {error ? (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </p>
-          ) : null}
-
-          {lastUrl ? (
-            <p className="break-all rounded-lg bg-mist-50 px-3 py-2 font-mono text-[11px] text-ink-600">
-              Redirecting to: {lastUrl}
-            </p>
-          ) : null}
-
-          <button type="submit" className="btn-primary w-full" disabled={busy}>
-            {busy ? "Starting…" : `Continue with ${provider}`}
+          <button type="submit" className="btn-primary w-full">
+            Continue with {provider}
           </button>
         </form>
 
         <ol className="mt-8 list-decimal space-y-2 pl-5 text-sm text-ink-600">
           <li>
-            Open Admin → app <strong>dsds</strong> → add Google (or GitHub)
+            Open Admin → your application → add Google (or GitHub)
             client id + secret.
           </li>
           <li>

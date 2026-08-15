@@ -38,6 +38,7 @@ export class StartOAuthUseCase {
 
   async execute(input: StartOAuthInput): Promise<{
     url: string;
+    setCookies: string[];
     applicationId: string;
     redirect: true;
   }> {
@@ -78,6 +79,7 @@ export class StartOAuthUseCase {
 
     return {
       url: result.url,
+      setCookies: result.setCookies,
       applicationId: app.id,
       redirect: true,
     };

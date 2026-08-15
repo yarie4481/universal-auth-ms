@@ -101,19 +101,8 @@ export async function startOAuth(
 
   const callbackURL = `${window.location.origin}/callback`;
   const qs = new URLSearchParams({ clientId: CLIENT_ID, callbackURL });
-  const res = await fetch(`${API}/api/v1/oauth/${provider}?${qs}`, {
-    credentials: "include",
-  });
-  const data = (await res.json()) as { url?: string; message?: string };
-
-  if (!res.ok || !data.url) {
-    throw new Error(
-      data.message ??
-        "OAuth start failed. In Admin, add this app's Google/GitHub secrets and allow redirect http://localhost:5173/callback",
-    );
-  }
-
-  window.location.href = data.url;
+  // Navigate (do not fetch) so the API can set the OAuth state cookie, then 302 to Google.
+  window.location.href = `${API}/api/v1/oauth/${provider}?${qs}`;
 }
 
 export async function getBrowserSession(): Promise<{
