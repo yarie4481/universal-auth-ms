@@ -26,6 +26,7 @@ export interface CreateApplicationInput {
 export interface CreateApplicationResult {
   application: Application;
   /** Shown once — store securely; only the hash is persisted. */
+   /** Shown once — store securely; only the hash is persisted. */
   clientSecret: string;
 }
 
