@@ -24,7 +24,8 @@
     "docker:dev": "docker compose -f docker-compose.dev.yml up -d",
     "docker:up": "docker compose up -d --build",
     "admin:dev": "npm --prefix admin run dev",
-    "admin:build": "npm --prefix admin run build"
+    "admin:build": "npm --prefix admin run build",
+    "client:dev": "npm --prefix clients/react-demo run dev"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

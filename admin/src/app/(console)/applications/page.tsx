@@ -62,6 +62,7 @@ export default function ApplicationsPage() {
                 <th className="px-6 py-3 font-semibold">Type</th>
                 <th className="px-6 py-3 font-semibold">Status</th>
                 <th className="px-6 py-3 font-semibold">Client ID</th>
+                <th className="px-6 py-3 font-semibold"> </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-mist-200">
@@ -90,6 +91,14 @@ export default function ApplicationsPage() {
                   </td>
                   <td className="px-6 py-4 font-mono text-xs text-ink-600/80">
                     {app.clientId}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <Link
+                      href={`/applications/${app.id}`}
+                      className="text-sm font-semibold text-accent-dark hover:underline"
+                    >
+                      Edit
+                    </Link>
                   </td>
                 </tr>
               ))}

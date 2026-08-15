@@ -16,12 +16,14 @@ const ENVS: AppEnvironment[] = ["development", "staging", "production"];
 interface ApplicationFormProps {
   initial?: Partial<CreateApplicationPayload>;
   submitLabel?: string;
+  lockEnvironment?: boolean;
   onSubmit: (payload: CreateApplicationPayload) => Promise<void>;
 }
 
 export function ApplicationForm({
   initial,
   submitLabel = "Create application",
+  lockEnvironment = false,
   onSubmit,
 }: ApplicationFormProps) {
   const [name, setName] = useState(initial?.name ?? "");
@@ -39,12 +41,14 @@ export function ApplicationForm({
     (initial?.allowedProviders ?? ["google", "github"]).join(", "),
   );
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setSuccess(null);
     try {
       await onSubmit({
         name: name.trim(),
@@ -54,6 +58,9 @@ export function ApplicationForm({
         allowedOrigins: splitLines(allowedOrigins),
         allowedProviders: splitCsv(allowedProviders),
       });
+      if (lockEnvironment) {
+        setSuccess("Application updated.");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
@@ -103,6 +110,7 @@ export function ApplicationForm({
             id="environment"
             className="field"
             value={environment}
+            disabled={lockEnvironment}
             onChange={(e) => setEnvironment(e.target.value as AppEnvironment)}
           >
             {ENVS.map((env) => (
@@ -111,6 +119,11 @@ export function ApplicationForm({
               </option>
             ))}
           </select>
+          {lockEnvironment ? (
+            <p className="mt-1.5 text-xs text-ink-600/70">
+              Environment cannot be changed after create.
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -123,9 +136,14 @@ export function ApplicationForm({
           className="field min-h-24 font-mono"
           value={redirectUris}
           onChange={(e) => setRedirectUris(e.target.value)}
-          placeholder={"http://localhost:3000/auth/callback\nmyapp://oauth"}
+          placeholder={
+            "http://localhost:5173/callback\nhttp://localhost:3002/oauth-test/callback"
+          }
         />
-        <p className="mt-1.5 text-xs text-ink-600/70">One URI per line</p>
+        <p className="mt-1.5 text-xs text-ink-600/70">
+          One URI per line. React test app:{" "}
+          <code>http://localhost:5173/callback</code>
+        </p>
       </div>
 
       <div>
@@ -156,6 +174,11 @@ export function ApplicationForm({
 
       {error ? (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+      ) : null}
+      {success ? (
+        <p className="rounded-lg bg-accent-soft px-3 py-2 text-sm text-accent-dark">
+          {success}
+        </p>
       ) : null}
 
       <button type="submit" className="btn-primary" disabled={busy}>

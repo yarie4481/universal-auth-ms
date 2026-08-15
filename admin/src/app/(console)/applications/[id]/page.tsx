@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { CopyButton } from "@/components/copy-button";
+import { ApplicationForm } from "@/components/application-form";
 import { ProviderForm } from "@/components/provider-form";
 import {
   deleteApplication,
@@ -169,16 +170,39 @@ export default function ApplicationDetailPage() {
             </div>
           ) : null}
         </div>
+      </section>
+
+      <section className="space-y-3">
         <div>
-          <p className="label">Redirect URIs</p>
-          <ul className="space-y-1 font-mono text-xs text-ink-700">
-            {app.redirectUris.length === 0 ? (
-              <li className="text-ink-600/60">None configured</li>
-            ) : (
-              app.redirectUris.map((uri) => <li key={uri}>{uri}</li>)
-            )}
-          </ul>
+          <h2 className="font-display text-2xl">Application settings</h2>
+          <p className="mt-1 text-sm text-ink-600/75">
+            Edit name, callback URLs, and allowed origins for this app.
+          </p>
         </div>
+        <ApplicationForm
+          key={app.id}
+          initial={{
+            name: app.name,
+            type: app.type,
+            environment: app.environment,
+            redirectUris: app.redirectUris,
+            allowedOrigins: app.allowedOrigins,
+            allowedProviders: app.allowedProviders,
+          }}
+          lockEnvironment
+          submitLabel="Save changes"
+          onSubmit={async (payload) => {
+            const updated = await updateApplication(app.id, {
+              name: payload.name,
+              type: payload.type,
+              redirectUris: payload.redirectUris,
+              allowedOrigins: payload.allowedOrigins,
+              allowedProviders: payload.allowedProviders,
+            });
+            setApp(updated);
+            setError(null);
+          }}
+        />
       </section>
 
       <section className="space-y-4">
