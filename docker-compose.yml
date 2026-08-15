@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: auth
+      POSTGRES_DB: auth
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  auth-api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      APP_BASE_URL: http://localhost:3000
+      DATABASE_URL: postgresql://auth:auth@postgres:5432/auth?schema=public
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-only-change-me-32chars-minimum!!}
+      JWT_ISSUER: http://localhost:3000
+      JWT_AUDIENCE: http://localhost:3000
+      JWT_EXPIRATION: 15m
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

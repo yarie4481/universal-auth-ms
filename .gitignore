@@ -1,0 +1,56 @@
+# compiled output
+/dist
+/build
+node_modules
+admin/.next
+admin/out
+
+# logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# tests
+/coverage
+/.nyc_output
+
+# IDEs
+.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# secrets / local env (never commit real keys)
+.env
+.env.*
+!.env.example
+!.env.*.example
+admin/.env
+admin/.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+credentials.json
+service-account*.json
+
+# misc
+.turbo
+.vercel
+*.tsbuildinfo

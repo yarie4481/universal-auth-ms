@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Better Auth core user model — do not diverge from Better Auth schema expectations.
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+/// Better Auth JWT plugin key store
+model Jwks {
+  id         String    @id @default(cuid())
+  publicKey  String
+  privateKey String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+
+  @@map("jwks")
+}
+
+enum ApplicationType {
+  WEB
+  SPA
+  MOBILE
+  BACKEND
+  MACHINE_TO_MACHINE
+}
+
+enum AppEnvironment {
+  development
+  staging
+  production
+}
+
+enum ApplicationStatus {
+  active
+  disabled
+}
+
+enum OAuthProviderType {
+  google
+  github
+}
+
+/// Consuming applications (Flutter, Go APIs, Next.js, etc.)
+model Application {
+  id               String            @id @default(cuid())
+  name             String
+  clientId         String            @unique
+  clientSecretHash String
+  type             ApplicationType
+  environment      AppEnvironment
+  redirectUris     String[]
+  allowedOrigins   String[]
+  allowedProviders String[]
+  allowedScopes    String[]
+  status           ApplicationStatus @default(active)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  oauthProviders   OAuthProviderConfig[]
+
+  @@unique([name, environment])
+  @@index([environment])
+  @@map("applications")
+}
+
+/// Per-application OAuth provider credentials (secrets encrypted at rest)
+model OAuthProviderConfig {
+  id              String            @id @default(cuid())
+  applicationId   String
+  application     Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  provider        OAuthProviderType
+  enabled         Boolean           @default(false)
+  clientId        String
+  clientSecretEnc String
+  scopes          String[]
+  redirectUri     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([applicationId, provider])
+  @@index([applicationId])
+  @@map("oauth_provider_configs")
+}
