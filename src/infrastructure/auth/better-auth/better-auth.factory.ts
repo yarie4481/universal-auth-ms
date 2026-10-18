@@ -37,8 +37,22 @@ export function createBetterAuth(
       enabled: true,
       requireEmailVerification: false,
     },
+    account: {
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ['google', 'github'],
+        // Email/password signup does not verify email in Phase 1, so Google
+        // must still be allowed to link to the same address.
+        requireLocalEmailVerified: false,
+      },
+    },
     socialProviders: social,
-    trustedOrigins: ['*'],
+    trustedOrigins: [
+      env.baseURL,
+      'http://localhost:3001',
+      'http://localhost:3002',
+      'http://localhost:5173',
+    ],
     plugins: [
       bearer(),
       jwt({

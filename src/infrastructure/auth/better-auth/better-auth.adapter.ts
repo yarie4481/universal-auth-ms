@@ -162,6 +162,51 @@ export class BetterAuthAdapter implements AuthEnginePort {
     }
   }
 
+  async getSessionFromCookies(
+    cookieHeader: string,
+    applicationId?: string,
+  ): Promise<AuthResult | null> {
+    try {
+      const auth = applicationId
+        ? await this.instances.getForApplication(applicationId)
+        : this.instances.getDefault();
+
+      const result = await auth.api.getSession({
+        headers: new Headers({ cookie: cookieHeader }),
+      });
+
+      if (!result?.user || !result.session?.token) {
+        return null;
+      }
+
+      const accessToken = result.session.token;
+      const jwtResult = await auth.api.getToken({
+        headers: this.bearerHeaders(accessToken),
+      });
+
+      if (!jwtResult?.token) {
+        throw new AuthEngineError('Failed to issue JWT');
+      }
+
+      const session = this.mapSession(result.session);
+      return {
+        user: this.mapUser(result.user),
+        session,
+        tokens: {
+          accessToken,
+          jwt: jwtResult.token,
+          tokenType: 'Bearer',
+          expiresAt: session.expiresAt,
+        },
+      };
+    } catch (error) {
+      this.logger.debug(
+        `getSessionFromCookies failed: ${this.safeErrorMessage(error)}`,
+      );
+      return null;
+    }
+  }
+
   private async toAuthResult(
     response: {
       user: {

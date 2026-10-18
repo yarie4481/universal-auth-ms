@@ -65,4 +65,8 @@ export interface AuthEnginePort {
   getOAuthAuthorizationUrl(
     command: OAuthAuthorizationCommand,
   ): Promise<{ url: string; setCookies: string[] }>;
+  getSessionFromCookies(
+    cookieHeader: string,
+    applicationId?: string,
+  ): Promise<AuthResult | null>;
 }

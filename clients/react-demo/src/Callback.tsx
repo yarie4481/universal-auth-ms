@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getBrowserSession, me, refreshJwt, storeTokens } from "./api";
+import { getOAuthSession, storeTokens } from "./api";
 
 export function Callback() {
   const [status, setStatus] = useState("Finishing social login…");
@@ -7,7 +7,9 @@ export function Callback() {
   const [ok, setOk] = useState(false);
 
   useEffect(() => {
-    const params = Object.fromEntries(new URLSearchParams(window.location.search));
+    const params = Object.fromEntries(
+      new URLSearchParams(window.location.search),
+    );
     if (params.error) {
       setStatus("OAuth returned an error");
       setDetail(JSON.stringify(params, null, 2));
@@ -16,43 +18,19 @@ export function Callback() {
 
     void (async () => {
       try {
-        const session = await getBrowserSession();
-        const token = session?.session?.token;
-        if (token) {
-          const [profile, jwt] = await Promise.all([
-            me(token).catch(() => null),
-            refreshJwt(token),
-          ]);
-          storeTokens({
-            accessToken: token,
-            jwt: jwt ?? token,
-            tokenType: "Bearer",
-            expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-          });
-          setOk(true);
-          setStatus(
-            profile?.user
-              ? `Signed in as ${profile.user.email}`
-              : "Social login completed. Session cookie is set.",
-          );
-          return;
-        }
-
-        if (session?.user) {
-          setOk(true);
-          setStatus(`Signed in as ${session.user.email}`);
-          return;
-        }
-
+        const result = await getOAuthSession();
+        storeTokens(result.tokens);
         setOk(true);
-        setStatus(
-          "Returned from Google/GitHub. If you are not signed in, add http://localhost:5173/callback to this app's Redirect URIs in Admin.",
-        );
-        if (Object.keys(params).length > 0) {
-          setDetail(JSON.stringify(params, null, 2));
-        }
+        setStatus(`Signed in as ${result.user.email}`);
+        window.setTimeout(() => {
+          window.location.replace("/");
+        }, 800);
       } catch (err) {
-        setStatus(err instanceof Error ? err.message : "Callback failed");
+        setStatus(
+          err instanceof Error
+            ? err.message
+            : "Could not read the session after Google login. Keep the API running on port 3001 and try again.",
+        );
       }
     })();
   }, []);

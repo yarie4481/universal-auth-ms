@@ -19,6 +19,32 @@ async function bootstrap() {
 
   expressApp.use(cookieParser());
 
+  expressApp.use((req: Request, res: Response, next: NextFunction) => {
+    if (!req.path.startsWith('/api/auth')) {
+      next();
+      return;
+    }
+    const origin = req.headers.origin;
+    if (origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Vary', 'Origin');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization, x-admin-api-key',
+      );
+      res.header(
+        'Access-Control-Allow-Methods',
+        'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      );
+    }
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(204);
+      return;
+    }
+    next();
+  });
+
   const instanceManager = app.get(BetterAuthInstanceManager);
   expressApp.all('/api/auth/*path', async (req: Request, res: Response) => {
     const applicationId =

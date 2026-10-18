@@ -20,6 +20,7 @@ import { LoginUseCase } from '../../../application/use-cases/login.use-case';
 import { LogoutUseCase } from '../../../application/use-cases/logout.use-case';
 import { GetMeUseCase } from '../../../application/use-cases/get-me.use-case';
 import { RefreshTokenUseCase } from '../../../application/use-cases/refresh-token.use-case';
+import { GetCookieSessionUseCase } from '../../../application/use-cases/get-cookie-session.use-case';
 import { LoginRequestDto, RegisterRequestDto } from '../dto/auth-request.dto';
 import { AccessToken } from '../decorators/access-token.decorator';
 import { BearerAuthGuard, SESSION_CONTEXT_KEY } from '../guards/bearer-auth.guard';
@@ -35,6 +36,7 @@ export class AuthController {
     private readonly logoutUseCase: LogoutUseCase,
     private readonly getMeUseCase: GetMeUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
+    private readonly getCookieSessionUseCase: GetCookieSessionUseCase,
   ) {}
 
   @Post('register')
@@ -80,6 +82,19 @@ export class AuthController {
   })
   async refresh(@AccessToken() accessToken?: string) {
     return this.refreshTokenUseCase.execute(accessToken);
+  }
+
+  @Get('session')
+  @ApiOperation({
+    summary:
+      'Read the current browser session (OAuth cookie) and return API tokens',
+  })
+  async session(@Req() req: Request) {
+    const result = await this.getCookieSessionUseCase.execute(
+      req.headers.cookie,
+      req.cookies?.oauth_app_id as string | undefined,
+    );
+    return toAuthResponse(result);
   }
 
   @Get('me')

@@ -13,6 +13,7 @@ describe('RegisterUseCase', () => {
     issueJwt: jest.fn(),
     getJwks: jest.fn(),
     getOAuthAuthorizationUrl: jest.fn(),
+    getSessionFromCookies: jest.fn(),
   };
 
   const useCase = new RegisterUseCase(authEngine);

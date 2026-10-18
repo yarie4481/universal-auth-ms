@@ -22,6 +22,7 @@ import {
   UpsertOAuthProviderUseCase,
 } from './use-cases/providers/provider.use-cases';
 import { StartOAuthUseCase } from './use-cases/oauth/start-oauth.use-case';
+import { GetCookieSessionUseCase } from './use-cases/get-cookie-session.use-case';
 
 const useCases = [
   RegisterUseCase,
@@ -42,6 +43,7 @@ const useCases = [
   UpdateOAuthProviderUseCase,
   DeleteOAuthProviderUseCase,
   StartOAuthUseCase,
+  GetCookieSessionUseCase,
 ];
 
 @Module({

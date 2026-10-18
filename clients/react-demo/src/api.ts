@@ -105,18 +105,12 @@ export async function startOAuth(
   window.location.href = `${API}/api/v1/oauth/${provider}?${qs}`;
 }
 
-export async function getBrowserSession(): Promise<{
-  user?: AuthUser;
-  session?: { token?: string };
-} | null> {
-  const res = await fetch(`${API}/api/auth/get-session`, {
+export async function getOAuthSession(): Promise<AuthResult> {
+  const res = await fetch(`${API}/api/v1/auth/session`, {
     credentials: "include",
   });
-  if (!res.ok) return null;
-  return res.json() as Promise<{
-    user?: AuthUser;
-    session?: { token?: string };
-  }>;
+  if (!res.ok) throw new Error(await readError(res));
+  return res.json() as Promise<AuthResult>;
 }
 
 export async function refreshJwt(accessToken: string): Promise<string | null> {
